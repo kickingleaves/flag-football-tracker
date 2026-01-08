@@ -1943,5 +1943,6 @@ export default function FlagFootballTrackerV4() {
 }
 
 // Render the app
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(<FlagFootballTracker />);
+   const rootElement = document.getElementById('root');
+   const root = ReactDOM.createRoot(rootElement);
+   root.render(React.createElement(FlagFootballTracker));
