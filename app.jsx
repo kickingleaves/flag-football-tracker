@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { Download, Plus, Trash2, Users, Flag, Clock, Trophy, ChevronRight, Settings, BarChart3, Mail } from 'lucide-react';
+
 
 export default function FlagFootballTrackerV4() {
   // All state
@@ -1942,3 +1941,7 @@ export default function FlagFootballTrackerV4() {
     </div>
   );
 }
+
+// Render the app
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<FlagFootballTracker />);
