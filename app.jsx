@@ -1447,34 +1447,6 @@ const FlagFootballTracker = () => {
               </div>
             </div>
           )}
-
-          {/* Import Season Dialog */}
-          {showImportDialog && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-lg w-full">
-                <h3 className="text-2xl font-bold mb-4 text-purple-600">📥 Import Season</h3>
-                <p className="text-gray-700 mb-4">Upload a previously exported season file (.json) to restore your data.</p>
-                <div className="mb-4">
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Select Season File</label>
-                  <input 
-                    type="file" 
-                    accept=".json"
-                    onChange={handleFileUpload}
-                    className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 focus:border-purple-500 focus:outline-none"
-                  />
-                </div>
-                {importData && (
-                  <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-xl">
-                    <p className="text-sm text-green-700 font-semibold">✓ File loaded successfully</p>
-                  </div>
-                )}
-                <div className="grid grid-cols-2 gap-3">
-                  <button onClick={() => { setShowImportDialog(false); setImportData(''); }} className="bg-gray-600 text-white py-4 rounded-xl font-bold hover:bg-gray-700">Cancel</button>
-                  <button onClick={importSeason} disabled={!importData} className={`py-4 rounded-xl font-bold ${importData ? 'bg-purple-600 text-white hover:bg-purple-700' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}>Import</button>
-                </div>
-              </div>
-            </div>
-          )}
           
           {/* Delete Game Confirmation Dialog */}
           {showDeleteConfirm && (
@@ -1996,6 +1968,34 @@ const FlagFootballTracker = () => {
               Export CSV
             </button>
             <button onClick={() => setView('home')} className="bg-blue-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:bg-blue-700">Back to Home</button>
+          </div>
+        </div>
+      )}
+
+      {/* Import Season Dialog - at root level so it shows from any view */}
+      {showImportDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-lg w-full">
+            <h3 className="text-2xl font-bold mb-4 text-purple-600">📥 Import Season</h3>
+            <p className="text-gray-700 mb-4">Upload a previously exported season file (.json) to restore your data.</p>
+            <div className="mb-4">
+              <label className="block text-sm font-bold text-gray-700 mb-2">Select Season File</label>
+              <input 
+                type="file" 
+                accept=".json"
+                onChange={handleFileUpload}
+                className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 focus:border-purple-500 focus:outline-none"
+              />
+            </div>
+            {importData && (
+              <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-xl">
+                <p className="text-sm text-green-700 font-semibold">✓ File loaded successfully</p>
+              </div>
+            )}
+            <div className="grid grid-cols-2 gap-3">
+              <button onClick={() => { setShowImportDialog(false); setImportData(''); }} className="bg-gray-600 text-white py-4 rounded-xl font-bold hover:bg-gray-700">Cancel</button>
+              <button onClick={importSeason} disabled={!importData} className={`py-4 rounded-xl font-bold ${importData ? 'bg-purple-600 text-white hover:bg-purple-700' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}>Import</button>
+            </div>
           </div>
         </div>
       )}
