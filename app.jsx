@@ -1,6 +1,29 @@
 
 
 const FlagFootballTracker = () => {
+  
+  // localStorage wrapper to match window.storage API
+  if (typeof window !== 'undefined' && !window.storage && window.localStorage) {
+    window.storage = {
+      get: async (key) => {
+        const value = localStorage.getItem(key);
+        return value ? { key, value, shared: false } : null;
+      },
+      set: async (key, value) => {
+        localStorage.setItem(key, value);
+        return { key, value, shared: false };
+      },
+      delete: async (key) => {
+        localStorage.removeItem(key);
+        return { key, deleted: true, shared: false };
+      },
+      list: async (prefix) => {
+        const keys = Object.keys(localStorage).filter(k => !prefix || k.startsWith(prefix));
+        return { keys, prefix, shared: false };
+      }
+    };
+  }
+  
   // All state
   const [games, setGames] = React.useState([]);
   const [currentGame, setCurrentGame] = React.useState(null);
@@ -57,13 +80,13 @@ const FlagFootballTracker = () => {
   // Initialize
   React.useEffect(() => {
     const init = async () => {
-      if (typeof window === 'undefined' || !window.storage) {
+      if (typeof window === 'undefined' || !window.localStorage) {
         setStorageAvailable(false);
         return;
       }
       // Load team info
       try {
-        const data = await window.storage.get('team_info');
+        const data = await localStorage.getItem('team_info');
         if (data?.value) {
           const info = JSON.parse(data.value);
           setTeamName(info.teamName || '');
@@ -72,16 +95,16 @@ const FlagFootballTracker = () => {
       } catch (e) {}
       // Load season stats
       try {
-        const data = await window.storage.get('season_stats');
+        const data = await localStorage.getItem('season_stats');
         if (data?.value) setSeasonStats(JSON.parse(data.value));
       } catch (e) {}
       // Load games
       try {
-        const result = await window.storage.list('game:');
+        const result = await localStorage.keys('game:');
         if (result?.keys) {
           const loaded = await Promise.all(result.keys.map(async (key) => {
             try {
-              const data = await window.storage.get(key);
+              const data = await localStorage.getItem(key);
               return data ? JSON.parse(data.value) : null;
             } catch (e) { return null; }
           }));
@@ -94,9 +117,9 @@ const FlagFootballTracker = () => {
 
   // Save functions
   const saveGame = async (game) => {
-    if (window.storage) {
+    if (window.localStorage) {
       try {
-        await window.storage.set(`game:${game.id}`, JSON.stringify(game));
+        await localStorage.setItem(`game:${game.id}`, JSON.stringify(game));
       } catch (e) {}
     }
     setGames(prev => {
@@ -143,9 +166,9 @@ const FlagFootballTracker = () => {
     }
     const updatedGame = { ...currentGame, teamName: setupTeamName, opponentName: setupOpponentName, roster: setupRoster, possession: setupFirstPossession };
     if (setupTeamName !== teamName || JSON.stringify(setupRoster) !== JSON.stringify(teamRoster)) {
-      if (window.storage) {
+      if (window.localStorage) {
         try {
-          window.storage.set('team_info', JSON.stringify({ teamName: setupTeamName, roster: setupRoster }));
+          localStorage.setItem('team_info', JSON.stringify({ teamName: setupTeamName, roster: setupRoster }));
         } catch (e) {}
       }
       setTeamName(setupTeamName);
@@ -225,8 +248,8 @@ const FlagFootballTracker = () => {
         });
         
         setSeasonStats(newSeasonStats);
-        if (window.storage) {
-          await window.storage.set('season_stats', JSON.stringify(newSeasonStats));
+        if (window.localStorage) {
+          await localStorage.setItem('season_stats', JSON.stringify(newSeasonStats));
         }
       } catch (error) {
         console.error('Error subtracting stats on delete:', error);
@@ -234,8 +257,8 @@ const FlagFootballTracker = () => {
     }
     
     // Delete the game
-    if (window.storage) {
-      try { await window.storage.delete(`game:${gameToDelete}`); } catch (e) {}
+    if (window.localStorage) {
+      try { await localStorage.removeItem(`game:${gameToDelete}`); } catch (e) {}
     }
     setGames(prev => prev.filter(g => g.id !== gameToDelete));
     
@@ -256,20 +279,12 @@ const FlagFootballTracker = () => {
     };
     
     const json = JSON.stringify(seasonData, null, 2);
-    const blob = new Blob([json], { type: 'application/json;charset=utf-8;' });
-    
-    // Create temporary link and trigger download using same method as CSV
+    // Use data URL for better mobile compatibility
+    const dataUrl = 'data:application/json;charset=utf-8,' + encodeURIComponent(json);
     const link = document.createElement('a');
-    if (link.download !== undefined) {
-      const url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
-      link.setAttribute('download', `${teamName || 'season'}_export_${new Date().toISOString().split('T')[0]}.json`);
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      setTimeout(() => URL.revokeObjectURL(url), 100);
-    }
+    link.href = dataUrl;
+    link.download = `${teamName || 'season'}_export_${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
   };
 
   const exportSeasonCSV = () => {
@@ -345,19 +360,12 @@ const FlagFootballTracker = () => {
       });
     }
     
-    // Create blob and download
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    // Use data URL for better mobile compatibility
+    const dataUrl = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
     const link = document.createElement('a');
-    if (link.download !== undefined) {
-      const url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
-      link.setAttribute('download', `${teamName}_season_stats_${new Date().toISOString().split('T')[0]}.csv`);
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      setTimeout(() => URL.revokeObjectURL(url), 100);
-    }
+    link.href = dataUrl;
+    link.download = `${teamName}_season_stats_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
   };
 
   const importSeason = async () => {
@@ -373,22 +381,22 @@ const FlagFootballTracker = () => {
       // Import team info
       setTeamName(data.teamInfo.teamName || '');
       setTeamRoster(data.teamInfo.roster || []);
-      if (window.storage) {
-        await window.storage.set('team_info', JSON.stringify(data.teamInfo));
+      if (window.localStorage) {
+        await localStorage.setItem('team_info', JSON.stringify(data.teamInfo));
       }
       
       // Import games
-      if (window.storage) {
+      if (window.localStorage) {
         for (const game of data.games) {
-          await window.storage.set(`game:${game.id}`, JSON.stringify(game));
+          await localStorage.setItem(`game:${game.id}`, JSON.stringify(game));
         }
       }
       setGames(data.games);
       
       // Import season stats
       setSeasonStats(data.seasonStats);
-      if (window.storage) {
-        await window.storage.set('season_stats', JSON.stringify(data.seasonStats));
+      if (window.localStorage) {
+        await localStorage.setItem('season_stats', JSON.stringify(data.seasonStats));
       }
       
       setShowImportDialog(false);
@@ -478,23 +486,12 @@ const FlagFootballTracker = () => {
       });
     }
     
-    // Create blob and download using traditional method
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    
-    // Create temporary link and trigger download
+    // Use data URL for better mobile compatibility
+    const dataUrl = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
     const link = document.createElement('a');
-    if (link.download !== undefined) {
-      // Feature detection for download attribute
-      const url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
-      link.setAttribute('download', `${game.teamName}_vs_${game.opponentName}_${new Date(game.date).toLocaleDateString().replace(/\//g, '-')}.csv`);
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      // Clean up the URL after a short delay
-      setTimeout(() => URL.revokeObjectURL(url), 100);
-    }
+    link.href = dataUrl;
+    link.download = `${game.teamName}_vs_${game.opponentName}_${new Date(game.date).toLocaleDateString().replace(/\//g, '-')}.csv`;
+    link.click();
   };
 
   const emailCSV = (game) => {
@@ -766,30 +763,33 @@ const FlagFootballTracker = () => {
         defender: !isOffense ? players.defender : null
       });
       
-      // Remember last passer/rusher for next play
+      // Remember last passer/rusher for next play (do this BEFORE resetting players)
+      const newLastPasser = playType === 'pass' && players.passer ? players.passer : lastPasser;
+      const newLastRusher = playType === 'run' && players.rusher ? players.rusher : lastRusher;
+      
       if (playType === 'pass' && players.passer) setLastPasser(players.passer);
       if (playType === 'run' && players.rusher) setLastRusher(players.rusher);
-    }
-    
-    setYards(0);
-    
-    // Determine possession after this play
-    // Check if possession will change (this is complex - safer to just keep last values for offense)
-    const wasOffense = currentGame.possession === 'team';
-    
-    if (wasOffense) {
-      // We were on offense - restore last passer/rusher
-      setPlayers({ 
-        passer: lastPasser, 
-        receiver: '', 
-        rusher: lastRusher, 
-        defender: '' 
-      });
-      setFlags({ complete: true, firstDown: false, touchdown: false, turnover: false, interception: false, flagPull: false, safety: false, passDeflection: false, incomplete: false });
-    } else {
-      // Defense - default to flag pull
-      setPlayers({ passer: '', receiver: '', rusher: '', defender: '' });
-      setFlags({ complete: true, firstDown: false, touchdown: false, turnover: false, interception: false, flagPull: true, safety: false, passDeflection: false, incomplete: false });
+      
+      // Immediately use the new values for resetting
+      setYards(0);
+      
+      // Determine possession after this play
+      const wasOffense = currentGame.possession === 'team';
+      
+      if (wasOffense) {
+        // We were on offense - restore last passer/rusher (use NEW values)
+        setPlayers({ 
+          passer: newLastPasser, 
+          receiver: '', 
+          rusher: newLastRusher, 
+          defender: '' 
+        });
+        setFlags({ complete: true, firstDown: false, touchdown: false, turnover: false, interception: false, flagPull: false, safety: false, passDeflection: false, incomplete: false });
+      } else {
+        // Defense - default to flag pull
+        setPlayers({ passer: '', receiver: '', rusher: '', defender: '' });
+        setFlags({ complete: true, firstDown: false, touchdown: false, turnover: false, interception: false, flagPull: true, safety: false, passDeflection: false, incomplete: false });
+      }
     }
   };
 
@@ -798,8 +798,15 @@ const FlagFootballTracker = () => {
     delete g.awaitingInterceptionInfo;
     g.possession = g.interceptionTeam;
     delete g.interceptionTeam;
-    if (isTD) { if (g.possession === 'team') g.score.team += 6; else g.score.opponent += 6; }
-    else { g.down = 1; g.lineOfScrimmage = fieldPos; g.yardsToGo = calculateYardsToFirstDown(fieldPos); }
+    if (isTD) { 
+      if (g.possession === 'team') g.score.team += 6; 
+      else g.score.opponent += 6; 
+    } else { 
+      g.down = 1; 
+      g.lineOfScrimmage = fieldPos; 
+      g.firstDownTarget = getFirstDownTargetLine(fieldPos, null);
+      g.yardsToGo = calculateYardsToFirstDown(fieldPos, g.firstDownTarget); 
+    }
     setCurrentGame(g); saveGame(g);
   };
 
@@ -928,9 +935,9 @@ const FlagFootballTracker = () => {
         setSeasonStats(newSeasonStats);
         
         // Try to save to storage with delay to avoid conflicts
-        if (window.storage) {
+        if (window.localStorage) {
           await new Promise(resolve => setTimeout(resolve, 100));
-          const result = await window.storage.set('season_stats', JSON.stringify(newSeasonStats));
+          const result = await localStorage.setItem('season_stats', JSON.stringify(newSeasonStats));
           if (result) {
             // Success
             break;
@@ -1045,8 +1052,8 @@ const FlagFootballTracker = () => {
         await saveGame(game);
         
         setSeasonStats(newSeasonStats);
-        if (window.storage) {
-          await window.storage.set('season_stats', JSON.stringify(newSeasonStats));
+        if (window.localStorage) {
+          await localStorage.setItem('season_stats', JSON.stringify(newSeasonStats));
         }
       } catch (error) {
         console.error('Error subtracting stats:', error);
@@ -1221,22 +1228,18 @@ const FlagFootballTracker = () => {
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3 mt-4 mb-3">
-              <button onClick={createNewGame} className="bg-white text-green-600 py-4 rounded-xl font-bold text-xl flex items-center justify-center gap-3 shadow-lg hover:bg-green-50 transition transform hover:scale-105">
-                ➕
+              <button onClick={createNewGame} className="bg-white text-green-600 py-4 rounded-xl font-bold text-lg text-center flex items-center justify-center gap-2 shadow-lg hover:bg-green-50 transition transform hover:scale-105">
                 New Game
               </button>
-              <button onClick={() => setView('season')} className="bg-yellow-400 text-gray-900 py-4 rounded-xl font-bold text-xl flex items-center justify-center gap-3 shadow-lg hover:bg-yellow-300 transition transform hover:scale-105">
-                🏆
+              <button onClick={() => setView('season')} className="bg-yellow-400 text-gray-900 py-4 rounded-xl font-bold text-lg text-center flex items-center justify-center gap-2 shadow-lg hover:bg-yellow-300 transition transform hover:scale-105">
                 Season Stats
               </button>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <button onClick={exportSeason} className="bg-blue-500 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 shadow hover:bg-blue-600 transition">
-                ⬇️
+              <button onClick={exportSeason} className="bg-blue-500 text-white py-3 rounded-xl font-bold text-base text-center flex items-center justify-center gap-2 shadow hover:bg-blue-600 transition">
                 Export Season
               </button>
-              <button onClick={() => setShowImportDialog(true)} className="bg-purple-500 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 shadow hover:bg-purple-600 transition">
-                ➕
+              <button onClick={() => setShowImportDialog(true)} className="bg-purple-500 text-white py-3 rounded-xl font-bold text-base text-center flex items-center justify-center gap-2 shadow hover:bg-purple-600 transition">
                 Import Season
               </button>
             </div>
@@ -1329,7 +1332,7 @@ const FlagFootballTracker = () => {
                   <input type="text" value={setupPlayerName} onChange={(e) => setSetupPlayerName(e.target.value)} onKeyPress={(e) => { if (e.key === 'Enter' && setupPlayerName && setupPlayerNumber) { setSetupRoster([...setupRoster, { id: Date.now(), name: setupPlayerName, number: setupPlayerNumber }]); setSetupPlayerName(''); setSetupPlayerNumber(''); } }} placeholder="Player name" className="border-2 border-gray-300 rounded-xl px-4 py-3 font-semibold focus:border-green-500 focus:outline-none" />
                   <input type="text" value={setupPlayerNumber} onChange={(e) => setSetupPlayerNumber(e.target.value)} onKeyPress={(e) => { if (e.key === 'Enter' && setupPlayerName && setupPlayerNumber) { setSetupRoster([...setupRoster, { id: Date.now(), name: setupPlayerName, number: setupPlayerNumber }]); setSetupPlayerName(''); setSetupPlayerNumber(''); } }} placeholder="Number" className="border-2 border-gray-300 rounded-xl px-4 py-3 font-semibold focus:border-green-500 focus:outline-none" />
                 </div>
-                <button onClick={() => { if (setupPlayerName && setupPlayerNumber) { setSetupRoster([...setupRoster, { id: Date.now(), name: setupPlayerName, number: setupPlayerNumber }]); setSetupPlayerName(''); setSetupPlayerNumber(''); } }} className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-3 rounded-xl font-bold hover:from-green-600 hover:to-green-700">Add Player</button>
+                <button onClick={() => { if (setupPlayerName && setupPlayerNumber) { setSetupRoster([...setupRoster, { id: Date.now(), name: setupPlayerName, number: setupPlayerNumber }]); setSetupPlayerName(''); setSetupPlayerNumber(''); setTimeout(() => { const nameInput = document.querySelector('input[placeholder="Player name"]'); if (nameInput) nameInput.focus(); }, 50); } }} className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-3 rounded-xl font-bold hover:from-green-600 hover:to-green-700">Add Player</button>
               </div>
               <div className="space-y-2 max-h-64 overflow-y-auto">
                 {setupRoster.map(player => (
@@ -1597,15 +1600,17 @@ const FlagFootballTracker = () => {
                   {playType !== 'punt' && (
                     <div className="bg-white rounded-2xl shadow-xl p-6 mb-4">
                       <p className="text-sm font-bold text-gray-600 mb-3">YARDS</p>
-                      <div className="flex gap-3 mb-4">
-                        <button onClick={() => setYards(Math.max(-20, yards - 5))} className="bg-red-500 text-white px-6 py-3 rounded-xl font-bold">-5</button>
-                        <button onClick={() => setYards(Math.max(-20, yards - 1))} className="bg-red-400 text-white px-6 py-3 rounded-xl font-bold">-1</button>
-                        <input type="number" value={yards} onChange={(e) => setYards(parseInt(e.target.value) || 0)} className="flex-1 border-2 rounded-xl px-4 py-3 text-center text-3xl font-bold" />
-                        <button onClick={() => setYards(Math.min(60, yards + 1))} className="bg-green-400 text-white px-6 py-3 rounded-xl font-bold">+1</button>
-                        <button onClick={() => setYards(Math.min(60, yards + 5))} className="bg-green-500 text-white px-6 py-3 rounded-xl font-bold">+5</button>
-                      </div>
-                      <div className="grid grid-cols-3 gap-2">
-                        {[10, 15, 20, 25, 30, 40].map(y => <button key={y} onClick={() => setYards(y)} className="bg-gray-100 py-2 rounded-lg font-semibold">{y}</button>)}
+                      <div className="max-w-2xl mx-auto">
+                        <div className="flex gap-3 mb-4">
+                          <button onClick={() => setYards(Math.max(-20, yards - 5))} className="bg-red-500 text-white px-6 py-3 rounded-xl font-bold">-5</button>
+                          <button onClick={() => setYards(Math.max(-20, yards - 1))} className="bg-red-400 text-white px-6 py-3 rounded-xl font-bold">-1</button>
+                          <input type="number" value={yards} onChange={(e) => setYards(parseInt(e.target.value) || 0)} className="flex-1 border-2 rounded-xl px-4 py-3 text-center text-3xl font-bold" />
+                          <button onClick={() => setYards(Math.min(60, yards + 1))} className="bg-green-400 text-white px-6 py-3 rounded-xl font-bold">+1</button>
+                          <button onClick={() => setYards(Math.min(60, yards + 5))} className="bg-green-500 text-white px-6 py-3 rounded-xl font-bold">+5</button>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2">
+                          {[10, 15, 20, 25, 30, 40].map(y => <button key={y} onClick={() => setYards(y)} className="bg-gray-100 py-2 rounded-lg font-semibold">{y}</button>)}
+                        </div>
                       </div>
                     </div>
                   )}
