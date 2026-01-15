@@ -1,6 +1,6 @@
 
 
-export default function FlagFootballTrackerV4() {
+const FlagFootballTracker = () => {
   // All state
   const [games, setGames] = useState([]);
   const [currentGame, setCurrentGame] = useState(null);
