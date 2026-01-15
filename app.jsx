@@ -1330,19 +1330,15 @@ const FlagFootballTracker = () => {
                   </div>
                   <div className="grid grid-cols-4 gap-2">
                     <button onClick={() => resumeGame(game)} className="bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 rounded-lg font-semibold hover:from-blue-600 hover:to-blue-700 transition flex items-center justify-center gap-2">
-                      ▶️
-                      Resume Scoring
+                      Resume
                     </button>
                     <button onClick={() => { setCurrentGame(game); setView('stats'); }} className="bg-gradient-to-r from-purple-500 to-purple-600 text-white py-3 rounded-lg font-semibold hover:from-purple-600 hover:to-purple-700 transition flex items-center justify-center gap-2">
-                      📊
                       Stats
                     </button>
                     <button onClick={() => downloadCSV(game)} className="bg-gradient-to-r from-green-500 to-green-600 text-white py-3 rounded-lg font-semibold hover:from-green-600 hover:to-green-700 transition flex items-center justify-center gap-2">
-                      ⬇️
                       CSV
                     </button>
                     <button onClick={() => emailCSV(game)} className="bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 rounded-lg font-semibold hover:from-orange-600 hover:to-orange-700 transition flex items-center justify-center gap-2">
-                      ✉️
                       Email
                     </button>
                   </div>
@@ -1443,20 +1439,6 @@ const FlagFootballTracker = () => {
                 <div className="grid grid-cols-2 gap-3">
                   <button onClick={() => setShowUndoConfirm(false)} className="bg-gray-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-gray-700">Cancel</button>
                   <button onClick={confirmUndo} className="bg-orange-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-orange-700">Yes, Undo</button>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          {/* Delete Game Confirmation Dialog */}
-          {showDeleteConfirm && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full">
-                <h3 className="text-2xl font-bold mb-4 text-red-600">⚠️ Delete Game</h3>
-                <p className="text-lg mb-6">Are you sure you want to delete this game? This will also remove all stats from your season totals. This action cannot be undone.</p>
-                <div className="grid grid-cols-2 gap-3">
-                  <button onClick={() => { setShowDeleteConfirm(false); setGameToDelete(null); }} className="bg-gray-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-gray-700">Cancel</button>
-                  <button onClick={confirmDeleteGame} className="bg-red-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-red-700">Yes, Delete</button>
                 </div>
               </div>
             </div>
@@ -1995,6 +1977,20 @@ const FlagFootballTracker = () => {
             <div className="grid grid-cols-2 gap-3">
               <button onClick={() => { setShowImportDialog(false); setImportData(''); }} className="bg-gray-600 text-white py-4 rounded-xl font-bold hover:bg-gray-700">Cancel</button>
               <button onClick={importSeason} disabled={!importData} className={`py-4 rounded-xl font-bold ${importData ? 'bg-purple-600 text-white hover:bg-purple-700' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}>Import</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Game Confirmation Dialog - at root level so it shows from any view */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full">
+            <h3 className="text-2xl font-bold mb-4 text-red-600">⚠️ Delete Game</h3>
+            <p className="text-lg mb-6">Are you sure you want to delete this game? This will also remove all stats from your season totals. This action cannot be undone.</p>
+            <div className="grid grid-cols-2 gap-3">
+              <button onClick={() => { setShowDeleteConfirm(false); setGameToDelete(null); }} className="bg-gray-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-gray-700">Cancel</button>
+              <button onClick={confirmDeleteGame} className="bg-red-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-red-700">Yes, Delete</button>
             </div>
           </div>
         </div>
