@@ -76,6 +76,7 @@ const FlagFootballTracker = () => {
   const [importData, setImportData] = React.useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
   const [gameToDelete, setGameToDelete] = React.useState(null);
+  const [endingGame, setEndingGame] = React.useState(false);
 
   // Initialize
   React.useEffect(() => {
@@ -279,12 +280,32 @@ const FlagFootballTracker = () => {
     };
     
     const json = JSON.stringify(seasonData, null, 2);
-    // Use data URL for better mobile compatibility
-    const dataUrl = 'data:application/json;charset=utf-8,' + encodeURIComponent(json);
-    const link = document.createElement('a');
-    link.href = dataUrl;
-    link.download = `${teamName || 'season'}_export_${new Date().toISOString().split('T')[0]}.json`;
-    link.click();
+    
+    // Try Share API first (works better on mobile)
+    if (navigator.share) {
+      const blob = new Blob([json], { type: 'application/json' });
+      const file = new File([blob], `${teamName || 'season'}_export.json`, { type: 'application/json' });
+      navigator.share({
+        files: [file],
+        title: 'Season Export',
+        text: `Season data export for ${teamName}`
+      }).catch(err => {
+        // Fallback to data URL
+        console.log('Share failed, using download:', err);
+        const dataUrl = 'data:application/json;charset=utf-8,' + encodeURIComponent(json);
+        const link = document.createElement('a');
+        link.href = dataUrl;
+        link.download = `${teamName || 'season'}_export_${new Date().toISOString().split('T')[0]}.json`;
+        link.click();
+      });
+    } else {
+      // Fallback to data URL
+      const dataUrl = 'data:application/json;charset=utf-8,' + encodeURIComponent(json);
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = `${teamName || 'season'}_export_${new Date().toISOString().split('T')[0]}.json`;
+      link.click();
+    }
   };
 
   const exportSeasonCSV = () => {
@@ -360,12 +381,31 @@ const FlagFootballTracker = () => {
       });
     }
     
-    // Use data URL for better mobile compatibility
-    const dataUrl = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
-    const link = document.createElement('a');
-    link.href = dataUrl;
-    link.download = `${teamName}_season_stats_${new Date().toISOString().split('T')[0]}.csv`;
-    link.click();
+    // Try Share API first (works better on mobile)
+    if (navigator.share) {
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const file = new File([blob], `${teamName}_season_stats.csv`, { type: 'text/csv' });
+      navigator.share({
+        files: [file],
+        title: 'Season Stats',
+        text: `Season statistics for ${teamName}`
+      }).catch(err => {
+        // Fallback to data URL
+        console.log('Share failed, using download:', err);
+        const dataUrl = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+        const link = document.createElement('a');
+        link.href = dataUrl;
+        link.download = `${teamName}_season_stats_${new Date().toISOString().split('T')[0]}.csv`;
+        link.click();
+      });
+    } else {
+      // Fallback to data URL
+      const dataUrl = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = `${teamName}_season_stats_${new Date().toISOString().split('T')[0]}.csv`;
+      link.click();
+    }
   };
 
   const importSeason = async () => {
@@ -486,12 +526,31 @@ const FlagFootballTracker = () => {
       });
     }
     
-    // Use data URL for better mobile compatibility
-    const dataUrl = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
-    const link = document.createElement('a');
-    link.href = dataUrl;
-    link.download = `${game.teamName}_vs_${game.opponentName}_${new Date(game.date).toLocaleDateString().replace(/\//g, '-')}.csv`;
-    link.click();
+    // Try Share API first (works better on mobile)
+    if (navigator.share) {
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const file = new File([blob], `${game.teamName}_vs_${game.opponentName}.csv`, { type: 'text/csv' });
+      navigator.share({
+        files: [file],
+        title: 'Game Stats',
+        text: `Stats for ${game.teamName} vs ${game.opponentName}`
+      }).catch(err => {
+        // If share fails, fall back to data URL
+        console.log('Share failed, using download:', err);
+        const dataUrl = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+        const link = document.createElement('a');
+        link.href = dataUrl;
+        link.download = `${game.teamName}_vs_${game.opponentName}_${new Date(game.date).toLocaleDateString().replace(/\//g, '-')}.csv`;
+        link.click();
+      });
+    } else {
+      // Fallback to data URL for browsers without Share API
+      const dataUrl = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = `${game.teamName}_vs_${game.opponentName}_${new Date(game.date).toLocaleDateString().replace(/\//g, '-')}.csv`;
+      link.click();
+    }
   };
 
   const emailCSV = (game) => {
@@ -825,12 +884,20 @@ const FlagFootballTracker = () => {
   };
 
   const endGame = async () => {
+    // Prevent multiple simultaneous calls
+    if (endingGame) {
+      console.log('Already ending game, ignoring duplicate call');
+      return;
+    }
+    setEndingGame(true);
+    
     const g = { ...currentGame };
     
     // Check if game is tied after regulation
     if (g.half === 2 && g.score.team === g.score.opponent) {
       g.awaitingOvertimeSetup = true;
       setCurrentGame(g);
+      setEndingGame(false);
       return;
     }
     
@@ -842,6 +909,7 @@ const FlagFootballTracker = () => {
       g.possession = g.overtimeFirstOffense;
       setCurrentGame(g);
       saveGame(g);
+      setEndingGame(false);
       return;
     }
     
@@ -849,6 +917,7 @@ const FlagFootballTracker = () => {
     if (g.completed) {
       alert('This game has already been completed and counted in season stats!');
       setView('stats');
+      setEndingGame(false);
       return;
     }
     
@@ -959,6 +1028,7 @@ const FlagFootballTracker = () => {
     // Show final score and go to stats
     alert(`Game Over! Final: ${g.teamName} ${g.score.team} - ${g.opponentName} ${g.score.opponent}`);
     setView('stats');
+    setEndingGame(false);
   };
 
   const startOvertime = (firstOff) => {
@@ -1600,13 +1670,13 @@ const FlagFootballTracker = () => {
                   {playType !== 'punt' && (
                     <div className="bg-white rounded-2xl shadow-xl p-6 mb-4">
                       <p className="text-sm font-bold text-gray-600 mb-3">YARDS</p>
-                      <div className="max-w-2xl mx-auto">
-                        <div className="flex gap-3 mb-4">
-                          <button onClick={() => setYards(Math.max(-20, yards - 5))} className="bg-red-500 text-white px-6 py-3 rounded-xl font-bold">-5</button>
-                          <button onClick={() => setYards(Math.max(-20, yards - 1))} className="bg-red-400 text-white px-6 py-3 rounded-xl font-bold">-1</button>
-                          <input type="number" value={yards} onChange={(e) => setYards(parseInt(e.target.value) || 0)} className="flex-1 border-2 rounded-xl px-4 py-3 text-center text-3xl font-bold" />
-                          <button onClick={() => setYards(Math.min(60, yards + 1))} className="bg-green-400 text-white px-6 py-3 rounded-xl font-bold">+1</button>
-                          <button onClick={() => setYards(Math.min(60, yards + 5))} className="bg-green-500 text-white px-6 py-3 rounded-xl font-bold">+5</button>
+                      <div className="max-w-xl mx-auto">
+                        <div className="flex gap-2 mb-4 items-center">
+                          <button onClick={() => setYards(Math.max(-20, yards - 5))} className="bg-red-500 text-white px-4 py-3 rounded-xl font-bold text-sm flex-shrink-0">-5</button>
+                          <button onClick={() => setYards(Math.max(-20, yards - 1))} className="bg-red-400 text-white px-4 py-3 rounded-xl font-bold text-sm flex-shrink-0">-1</button>
+                          <input type="number" value={yards} onChange={(e) => setYards(parseInt(e.target.value) || 0)} className="flex-1 min-w-0 border-2 rounded-xl px-2 py-3 text-center text-2xl font-bold" />
+                          <button onClick={() => setYards(Math.min(60, yards + 1))} className="bg-green-400 text-white px-4 py-3 rounded-xl font-bold text-sm flex-shrink-0">+1</button>
+                          <button onClick={() => setYards(Math.min(60, yards + 5))} className="bg-green-500 text-white px-4 py-3 rounded-xl font-bold text-sm flex-shrink-0">+5</button>
                         </div>
                         <div className="grid grid-cols-3 gap-2">
                           {[10, 15, 20, 25, 30, 40].map(y => <button key={y} onClick={() => setYards(y)} className="bg-gray-100 py-2 rounded-lg font-semibold">{y}</button>)}
