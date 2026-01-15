@@ -2,60 +2,60 @@
 
 const FlagFootballTracker = () => {
   // All state
-  const [games, setGames] = useState([]);
-  const [currentGame, setCurrentGame] = useState(null);
-  const [view, setView] = useState('home');
-  const [seasonStats, setSeasonStats] = useState({
+  const [games, setGames] = React.useState([]);
+  const [currentGame, setCurrentGame] = React.useState(null);
+  const [view, setView] = React.useState('home');
+  const [seasonStats, setSeasonStats] = React.useState({
     playerStats: {},
     teamStats: { gamesPlayed: 0, wins: 0, losses: 0, ties: 0, totalPointsFor: 0, totalPointsAgainst: 0 },
     gameIds: []
   });
-  const [teamRoster, setTeamRoster] = useState([]);
-  const [teamName, setTeamName] = useState('');
-  const [storageAvailable, setStorageAvailable] = useState(true);
+  const [teamRoster, setTeamRoster] = React.useState([]);
+  const [teamName, setTeamName] = React.useState('');
+  const [storageAvailable, setStorageAvailable] = React.useState(true);
 
   // Setup view state
-  const [setupTeamName, setSetupTeamName] = useState('');
-  const [setupOpponentName, setSetupOpponentName] = useState('');
-  const [setupRoster, setSetupRoster] = useState([]);
-  const [setupPlayerName, setSetupPlayerName] = useState('');
-  const [setupPlayerNumber, setSetupPlayerNumber] = useState('');
-  const [setupFirstPossession, setSetupFirstPossession] = useState('team');
+  const [setupTeamName, setSetupTeamName] = React.useState('');
+  const [setupOpponentName, setSetupOpponentName] = React.useState('');
+  const [setupRoster, setSetupRoster] = React.useState([]);
+  const [setupPlayerName, setSetupPlayerName] = React.useState('');
+  const [setupPlayerNumber, setSetupPlayerNumber] = React.useState('');
+  const [setupFirstPossession, setSetupFirstPossession] = React.useState('team');
 
   // Game view state
-  const [gameMode, setGameMode] = useState('normal');
-  const [playType, setPlayType] = useState('pass');
-  const [yards, setYards] = useState(0);
-  const [players, setPlayers] = useState({ passer: '', receiver: '', rusher: '', defender: '' });
-  const [flags, setFlags] = useState({ complete: true, firstDown: false, touchdown: false, turnover: false, interception: false, flagPull: true, safety: false, passDeflection: false, incomplete: false });
-  const [lastPasser, setLastPasser] = useState('');
-  const [lastRusher, setLastRusher] = useState('');
-  const [showSettings, setShowSettings] = useState(false);
-  const [pointAfterType, setPointAfterType] = useState(1);
-  const [pointAfterSuccess, setPointAfterSuccess] = useState(true);
-  const [interceptionTD, setInterceptionTD] = useState(false);
-  const [interceptionFieldPos, setInterceptionFieldPos] = useState(20);
-  const [otConversionType, setOtConversionType] = useState(1);
-  const [otConversionSuccess, setOtConversionSuccess] = useState(true);
-  const [otPlayType, setOtPlayType] = useState('run');
-  const [showEndHalfDialog, setShowEndHalfDialog] = useState(false);
-  const [endHalfPossession, setEndHalfPossession] = useState('team');
+  const [gameMode, setGameMode] = React.useState('normal');
+  const [playType, setPlayType] = React.useState('pass');
+  const [yards, setYards] = React.useState(0);
+  const [players, setPlayers] = React.useState({ passer: '', receiver: '', rusher: '', defender: '' });
+  const [flags, setFlags] = React.useState({ complete: true, firstDown: false, touchdown: false, turnover: false, interception: false, flagPull: true, safety: false, passDeflection: false, incomplete: false });
+  const [lastPasser, setLastPasser] = React.useState('');
+  const [lastRusher, setLastRusher] = React.useState('');
+  const [showSettings, setShowSettings] = React.useState(false);
+  const [pointAfterType, setPointAfterType] = React.useState(1);
+  const [pointAfterSuccess, setPointAfterSuccess] = React.useState(true);
+  const [interceptionTD, setInterceptionTD] = React.useState(false);
+  const [interceptionFieldPos, setInterceptionFieldPos] = React.useState(20);
+  const [otConversionType, setOtConversionType] = React.useState(1);
+  const [otConversionSuccess, setOtConversionSuccess] = React.useState(true);
+  const [otPlayType, setOtPlayType] = React.useState('run');
+  const [showEndHalfDialog, setShowEndHalfDialog] = React.useState(false);
+  const [endHalfPossession, setEndHalfPossession] = React.useState('team');
 
   // Stats view state
-  const [statsView, setStatsView] = useState('team');
+  const [statsView, setStatsView] = React.useState('team');
 
   // Penalty state
-  const [penaltyYards, setPenaltyYards] = useState(0);
-  const [penaltyOnOffense, setPenaltyOnOffense] = useState(true);
-  const [penaltyLossOfDown, setPenaltyLossOfDown] = useState(false);
-  const [showUndoConfirm, setShowUndoConfirm] = useState(false);
-  const [showImportDialog, setShowImportDialog] = useState(false);
-  const [importData, setImportData] = useState('');
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [gameToDelete, setGameToDelete] = useState(null);
+  const [penaltyYards, setPenaltyYards] = React.useState(0);
+  const [penaltyOnOffense, setPenaltyOnOffense] = React.useState(true);
+  const [penaltyLossOfDown, setPenaltyLossOfDown] = React.useState(false);
+  const [showUndoConfirm, setShowUndoConfirm] = React.useState(false);
+  const [showImportDialog, setShowImportDialog] = React.useState(false);
+  const [importData, setImportData] = React.useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
+  const [gameToDelete, setGameToDelete] = React.useState(null);
 
   // Initialize
-  useEffect(() => {
+  React.useEffect(() => {
     const init = async () => {
       if (typeof window === 'undefined' || !window.storage) {
         setStorageAvailable(false);
@@ -1209,7 +1209,7 @@ const FlagFootballTracker = () => {
         <div className="p-6 max-w-4xl mx-auto">
           <div className="bg-gradient-to-r from-green-600 to-blue-600 rounded-2xl shadow-2xl p-8 mb-8 text-white">
             <div className="flex items-center gap-4 mb-4">
-              <Flag size={48} className="animate-pulse" />
+              <lucide.Flag size={48} className="animate-pulse" />
               <div className="flex-1">
                 <h1 className="text-4xl font-bold">{teamName || 'Flag Football Tracker'}</h1>
                 <p className="text-green-100 text-lg">WIAA Washington State Rules</p>
@@ -1222,21 +1222,21 @@ const FlagFootballTracker = () => {
             </div>
             <div className="grid grid-cols-2 gap-3 mt-4 mb-3">
               <button onClick={createNewGame} className="bg-white text-green-600 py-4 rounded-xl font-bold text-xl flex items-center justify-center gap-3 shadow-lg hover:bg-green-50 transition transform hover:scale-105">
-                <Plus size={28} />
+                <lucide.Plus size={28} />
                 New Game
               </button>
               <button onClick={() => setView('season')} className="bg-yellow-400 text-gray-900 py-4 rounded-xl font-bold text-xl flex items-center justify-center gap-3 shadow-lg hover:bg-yellow-300 transition transform hover:scale-105">
-                <Trophy size={28} />
+                <lucide.Trophy size={28} />
                 Season Stats
               </button>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <button onClick={exportSeason} className="bg-blue-500 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 shadow hover:bg-blue-600 transition">
-                <Download size={20} />
+                <lucide.Download size={20} />
                 Export Season
               </button>
               <button onClick={() => setShowImportDialog(true)} className="bg-purple-500 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 shadow hover:bg-purple-600 transition">
-                <Plus size={20} />
+                <lucide.Plus size={20} />
                 Import Season
               </button>
             </div>
@@ -1244,12 +1244,12 @@ const FlagFootballTracker = () => {
 
           <div className="space-y-4">
             <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-              <Clock size={28} />
+              <lucide.Clock size={28} />
               Game History
             </h2>
             {games.length === 0 ? (
               <div className="bg-white rounded-xl shadow p-12 text-center">
-                <Trophy size={64} className="mx-auto text-gray-300 mb-4" />
+                <lucide.Trophy size={64} className="mx-auto text-gray-300 mb-4" />
                 <p className="text-gray-500 text-lg">No games yet. Start your first game above!</p>
               </div>
             ) : (
@@ -1266,24 +1266,24 @@ const FlagFootballTracker = () => {
                       </p>
                     </div>
                     <button onClick={() => deleteGame(game.id)} className="text-red-500 hover:text-red-700 p-2">
-                      <Trash2 size={20} />
+                      <lucide.Trash2 size={20} />
                     </button>
                   </div>
                   <div className="grid grid-cols-4 gap-2">
                     <button onClick={() => resumeGame(game)} className="bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 rounded-lg font-semibold hover:from-blue-600 hover:to-blue-700 transition flex items-center justify-center gap-2">
-                      <ChevronRight size={20} />
+                      <lucide.ChevronRight size={20} />
                       Resume Scoring
                     </button>
                     <button onClick={() => { setCurrentGame(game); setView('stats'); }} className="bg-gradient-to-r from-purple-500 to-purple-600 text-white py-3 rounded-lg font-semibold hover:from-purple-600 hover:to-purple-700 transition flex items-center justify-center gap-2">
-                      <BarChart3 size={20} />
+                      <lucide.BarChart3 size={20} />
                       Stats
                     </button>
                     <button onClick={() => downloadCSV(game)} className="bg-gradient-to-r from-green-500 to-green-600 text-white py-3 rounded-lg font-semibold hover:from-green-600 hover:to-green-700 transition flex items-center justify-center gap-2">
-                      <Download size={20} />
+                      <lucide.Download size={20} />
                       CSV
                     </button>
                     <button onClick={() => emailCSV(game)} className="bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 rounded-lg font-semibold hover:from-orange-600 hover:to-orange-700 transition flex items-center justify-center gap-2">
-                      <Mail size={20} />
+                      <lucide.Mail size={20} />
                       Email
                     </button>
                   </div>
@@ -1323,7 +1323,7 @@ const FlagFootballTracker = () => {
               </div>
             </div>
             <div className="bg-white rounded-2xl shadow-xl p-6">
-              <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2"><Users size={24} />Roster</h2>
+              <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2"><lucide.Users size={24} />Roster</h2>
               <div className="space-y-3 mb-4">
                 <div className="grid grid-cols-2 gap-3">
                   <input type="text" value={setupPlayerName} onChange={(e) => setSetupPlayerName(e.target.value)} onKeyPress={(e) => { if (e.key === 'Enter' && setupPlayerName && setupPlayerNumber) { setSetupRoster([...setupRoster, { id: Date.now(), name: setupPlayerName, number: setupPlayerNumber }]); setSetupPlayerName(''); setSetupPlayerNumber(''); } }} placeholder="Player name" className="border-2 border-gray-300 rounded-xl px-4 py-3 font-semibold focus:border-green-500 focus:outline-none" />
@@ -1335,7 +1335,7 @@ const FlagFootballTracker = () => {
                 {setupRoster.map(player => (
                   <div key={player.id} className="flex items-center justify-between bg-gradient-to-r from-gray-50 to-blue-50 p-3 rounded-xl">
                     <span className="font-semibold">#{player.number} {player.name}</span>
-                    <button onClick={() => setSetupRoster(setupRoster.filter(p => p.id !== player.id))} className="text-red-500 hover:text-red-700"><Trash2 size={18} /></button>
+                    <button onClick={() => setSetupRoster(setupRoster.filter(p => p.id !== player.id))} className="text-red-500 hover:text-red-700"><lucide.Trash2 size={18} /></button>
                   </div>
                 ))}
               </div>
@@ -1683,8 +1683,8 @@ const FlagFootballTracker = () => {
           {/* Bottom Nav */}
           <div className="fixed bottom-0 left-0 right-0 bg-white border-t-2 p-4 grid grid-cols-4 gap-3 max-w-4xl mx-auto">
             <button onClick={undoLastPlay} className="bg-orange-600 text-white py-3 rounded-xl font-bold">Undo</button>
-            <button onClick={() => setShowSettings(true)} className="bg-gray-600 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2"><Settings size={20} />Settings</button>
-            <button onClick={() => setView('stats')} className="bg-purple-600 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2"><BarChart3 size={20} />Stats</button>
+            <button onClick={() => setShowSettings(true)} className="bg-gray-600 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2"><lucide.Settings size={20} />Settings</button>
+            <button onClick={() => setView('stats')} className="bg-purple-600 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2"><lucide.BarChart3 size={20} />Stats</button>
             <button onClick={() => currentGame.half === 1 ? setShowEndHalfDialog(true) : endGame()} className="bg-red-600 text-white py-3 rounded-xl font-bold">{currentGame.half === 1 ? 'End Half' : 'End Game'}</button>
           </div>
         </div>
@@ -1705,7 +1705,7 @@ const FlagFootballTracker = () => {
           {statsView === 'team' ? (
             <>
               <div className="bg-white rounded-2xl shadow-xl p-6 mb-4">
-                <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2"><Flag size={24} className="text-green-600" />Offense</h3>
+                <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2"><lucide.Flag size={24} className="text-green-600" />Offense</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-gray-50 p-4 rounded-xl"><p className="text-sm text-gray-600 font-semibold">Total Plays</p><p className="text-3xl font-bold text-gray-800">{currentGame.stats.offense.totalPlays}</p></div>
                   <div className="bg-gray-50 p-4 rounded-xl"><p className="text-sm text-gray-600 font-semibold">1st Downs</p><p className="text-3xl font-bold text-gray-800">{currentGame.stats.offense.firstDowns}</p></div>
@@ -1717,7 +1717,7 @@ const FlagFootballTracker = () => {
               </div>
 
               <div className="bg-white rounded-2xl shadow-xl p-6 mb-4">
-                <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2"><Flag size={24} className="text-blue-600" />Defense</h3>
+                <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2"><lucide.Flag size={24} className="text-blue-600" />Defense</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-gray-50 p-4 rounded-xl"><p className="text-sm text-gray-600 font-semibold">Flag Pulls</p><p className="text-3xl font-bold text-gray-800">{currentGame.stats.defense.flagPulls}</p></div>
                   <div className="bg-gray-50 p-4 rounded-xl"><p className="text-sm text-gray-600 font-semibold">Interceptions</p><p className="text-3xl font-bold text-blue-600">{currentGame.stats.defense.interceptions}</p></div>
@@ -1809,8 +1809,8 @@ const FlagFootballTracker = () => {
           <div className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-gray-200 p-4 grid grid-cols-4 gap-3 max-w-4xl mx-auto">
             <button onClick={() => setView('home')} className="bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 rounded-xl font-bold hover:from-blue-700 hover:to-blue-800">Home</button>
             <button onClick={() => setView('game')} className="bg-gradient-to-r from-gray-600 to-gray-700 text-white py-3 rounded-xl font-bold hover:from-gray-700 hover:to-gray-800">Back</button>
-            <button onClick={() => downloadCSV(currentGame)} className="bg-gradient-to-r from-green-600 to-green-700 text-white py-3 rounded-xl font-bold hover:from-green-700 hover:to-green-800 flex items-center justify-center gap-2"><Download size={20} />CSV</button>
-            <button onClick={() => emailCSV(currentGame)} className="bg-gradient-to-r from-orange-600 to-orange-700 text-white py-3 rounded-xl font-bold hover:from-orange-700 hover:to-orange-800 flex items-center justify-center gap-2"><Mail size={20} />Email</button>
+            <button onClick={() => downloadCSV(currentGame)} className="bg-gradient-to-r from-green-600 to-green-700 text-white py-3 rounded-xl font-bold hover:from-green-700 hover:to-green-800 flex items-center justify-center gap-2"><lucide.Download size={20} />CSV</button>
+            <button onClick={() => emailCSV(currentGame)} className="bg-gradient-to-r from-orange-600 to-orange-700 text-white py-3 rounded-xl font-bold hover:from-orange-700 hover:to-orange-800 flex items-center justify-center gap-2"><lucide.Mail size={20} />Email</button>
           </div>
         </div>
       )}
@@ -1828,7 +1828,7 @@ const FlagFootballTracker = () => {
           {/* Team Stats - Offense */}
           {seasonStats.teamStats.offense && (
             <div className="bg-white rounded-2xl shadow-xl p-6 mb-4">
-              <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2"><Flag size={24} className="text-green-600" />Team Offense</h3>
+              <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2"><lucide.Flag size={24} className="text-green-600" />Team Offense</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-gray-50 p-4 rounded-xl"><p className="text-sm text-gray-600 font-semibold">Total Plays</p><p className="text-3xl font-bold text-gray-800">{seasonStats.teamStats.offense.totalPlays}</p></div>
                 <div className="bg-gray-50 p-4 rounded-xl"><p className="text-sm text-gray-600 font-semibold">1st Downs</p><p className="text-3xl font-bold text-gray-800">{seasonStats.teamStats.offense.firstDowns}</p></div>
@@ -1843,7 +1843,7 @@ const FlagFootballTracker = () => {
           {/* Team Stats - Defense */}
           {seasonStats.teamStats.defense && (
             <div className="bg-white rounded-2xl shadow-xl p-6 mb-4">
-              <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2"><Flag size={24} className="text-blue-600" />Team Defense</h3>
+              <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2"><lucide.Flag size={24} className="text-blue-600" />Team Defense</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-gray-50 p-4 rounded-xl"><p className="text-sm text-gray-600 font-semibold">Flag Pulls</p><p className="text-3xl font-bold text-gray-800">{seasonStats.teamStats.defense.flagPulls}</p></div>
                 <div className="bg-gray-50 p-4 rounded-xl"><p className="text-sm text-gray-600 font-semibold">Interceptions</p><p className="text-3xl font-bold text-blue-600">{seasonStats.teamStats.defense.interceptions}</p></div>
@@ -1931,7 +1931,7 @@ const FlagFootballTracker = () => {
 
           <div className="grid grid-cols-2 gap-3 mt-4">
             <button onClick={exportSeasonCSV} className="bg-green-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:bg-green-700 flex items-center justify-center gap-2">
-              <Download size={24} />
+              <lucide.Download size={24} />
               Export CSV
             </button>
             <button onClick={() => setView('home')} className="bg-blue-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:bg-blue-700">Back to Home</button>
@@ -1943,6 +1943,6 @@ const FlagFootballTracker = () => {
 }
 
 // Render the app
-   const rootElement = document.getElementById('root');
-   const root = ReactDOM.createRoot(rootElement);
-   root.render(React.createElement(FlagFootballTracker));
+const rootElement = document.getElementById('root');
+const root = ReactDOM.createRoot(rootElement);
+root.render(React.createElement(FlagFootballTracker));
