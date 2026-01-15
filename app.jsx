@@ -937,92 +937,78 @@ const FlagFootballTracker = () => {
     await saveGame(g);
     setCurrentGame(g);
     
-    // Update season stats with retry logic
-    let retries = 3;
-    while (retries > 0) {
-      try {
-        const newSeasonStats = { ...seasonStats };
-        
-        // Update team record
-        newSeasonStats.teamStats.gamesPlayed = (newSeasonStats.teamStats.gamesPlayed || 0) + 1;
-        if (g.result === 'win') newSeasonStats.teamStats.wins = (newSeasonStats.teamStats.wins || 0) + 1;
-        else if (g.result === 'loss') newSeasonStats.teamStats.losses = (newSeasonStats.teamStats.losses || 0) + 1;
-        else newSeasonStats.teamStats.ties = (newSeasonStats.teamStats.ties || 0) + 1;
-        
-        newSeasonStats.teamStats.totalPointsFor = (newSeasonStats.teamStats.totalPointsFor || 0) + g.score.team;
-        newSeasonStats.teamStats.totalPointsAgainst = (newSeasonStats.teamStats.totalPointsAgainst || 0) + g.score.opponent;
-        
-        // Aggregate offense stats
-        if (!newSeasonStats.teamStats.offense) {
-          newSeasonStats.teamStats.offense = { passAttempts: 0, completions: 0, passingYards: 0, rushAttempts: 0, rushingYards: 0, firstDowns: 0, touchdowns: 0, totalPlays: 0 };
-        }
-        newSeasonStats.teamStats.offense.passAttempts += g.stats.offense.passAttempts;
-        newSeasonStats.teamStats.offense.completions += g.stats.offense.completions;
-        newSeasonStats.teamStats.offense.passingYards += g.stats.offense.passingYards;
-        newSeasonStats.teamStats.offense.rushAttempts += g.stats.offense.rushAttempts;
-        newSeasonStats.teamStats.offense.rushingYards += g.stats.offense.rushingYards;
-        newSeasonStats.teamStats.offense.firstDowns += g.stats.offense.firstDowns;
-        newSeasonStats.teamStats.offense.touchdowns += g.stats.offense.touchdowns;
-        newSeasonStats.teamStats.offense.totalPlays += g.stats.offense.totalPlays;
-        
-        // Aggregate defense stats
-        if (!newSeasonStats.teamStats.defense) {
-          newSeasonStats.teamStats.defense = { flagPulls: 0, interceptions: 0, forcedPunts: 0, turnoversOnDowns: 0 };
-        }
-        newSeasonStats.teamStats.defense.flagPulls += g.stats.defense.flagPulls;
-        newSeasonStats.teamStats.defense.interceptions += g.stats.defense.interceptions;
-        newSeasonStats.teamStats.defense.forcedPunts = (newSeasonStats.teamStats.defense.forcedPunts || 0) + (g.stats.defense.forcedPunts || 0);
-        newSeasonStats.teamStats.defense.turnoversOnDowns = (newSeasonStats.teamStats.defense.turnoversOnDowns || 0) + (g.stats.defense.turnoversOnDowns || 0);
-        
-        // Aggregate player stats
-        if (!newSeasonStats.playerStats) newSeasonStats.playerStats = {};
-        Object.entries(g.playerStats || {}).forEach(([playerId, stats]) => {
-          if (!newSeasonStats.playerStats[playerId]) {
-            newSeasonStats.playerStats[playerId] = JSON.parse(JSON.stringify(stats));
-          } else {
-            // Aggregate offense
-            newSeasonStats.playerStats[playerId].offense.passAttempts += stats.offense.passAttempts;
-            newSeasonStats.playerStats[playerId].offense.completions += stats.offense.completions;
-            newSeasonStats.playerStats[playerId].offense.incompletions += stats.offense.incompletions;
-            newSeasonStats.playerStats[playerId].offense.passingYards += stats.offense.passingYards;
-            newSeasonStats.playerStats[playerId].offense.interceptions += stats.offense.interceptions;
-            newSeasonStats.playerStats[playerId].offense.rushAttempts += stats.offense.rushAttempts;
-            newSeasonStats.playerStats[playerId].offense.rushingYards += stats.offense.rushingYards;
-            newSeasonStats.playerStats[playerId].offense.receptions += stats.offense.receptions;
-            newSeasonStats.playerStats[playerId].offense.receivingYards += stats.offense.receivingYards;
-            newSeasonStats.playerStats[playerId].offense.touchdowns += stats.offense.touchdowns;
-            
-            // Aggregate defense
-            newSeasonStats.playerStats[playerId].defense.flagPulls += stats.defense.flagPulls;
-            newSeasonStats.playerStats[playerId].defense.interceptions += stats.defense.interceptions;
-            newSeasonStats.playerStats[playerId].defense.tacklesForLoss += (stats.defense.tacklesForLoss || 0);
-            newSeasonStats.playerStats[playerId].defense.passDeflections += (stats.defense.passDeflections || 0);
-          }
-        });
-        
-        // Update state first
-        setSeasonStats(newSeasonStats);
-        
-        // Try to save to storage with delay to avoid conflicts
-        if (window.localStorage) {
-          await new Promise(resolve => setTimeout(resolve, 100));
-          const result = await localStorage.setItem('season_stats', JSON.stringify(newSeasonStats));
-          if (result) {
-            // Success
-            break;
-          }
-        } else {
-          break;
-        }
-      } catch (error) {
-        console.error(`Error updating season stats (${retries} retries left):`, error);
-        retries--;
-        if (retries > 0) {
-          await new Promise(resolve => setTimeout(resolve, 200));
-        } else {
-          alert('Warning: Season stats may not have been saved properly. Game stats are saved.');
-        }
+    // Update season stats (NO RETRY LOOP - just do it once)
+    try {
+      const newSeasonStats = { ...seasonStats };
+      
+      // Update team record
+      newSeasonStats.teamStats.gamesPlayed = (newSeasonStats.teamStats.gamesPlayed || 0) + 1;
+      if (g.result === 'win') newSeasonStats.teamStats.wins = (newSeasonStats.teamStats.wins || 0) + 1;
+      else if (g.result === 'loss') newSeasonStats.teamStats.losses = (newSeasonStats.teamStats.losses || 0) + 1;
+      else newSeasonStats.teamStats.ties = (newSeasonStats.teamStats.ties || 0) + 1;
+      
+      newSeasonStats.teamStats.totalPointsFor = (newSeasonStats.teamStats.totalPointsFor || 0) + g.score.team;
+      newSeasonStats.teamStats.totalPointsAgainst = (newSeasonStats.teamStats.totalPointsAgainst || 0) + g.score.opponent;
+      
+      // Aggregate offense stats
+      if (!newSeasonStats.teamStats.offense) {
+        newSeasonStats.teamStats.offense = { passAttempts: 0, completions: 0, passingYards: 0, rushAttempts: 0, rushingYards: 0, firstDowns: 0, touchdowns: 0, totalPlays: 0 };
       }
+      newSeasonStats.teamStats.offense.passAttempts += g.stats.offense.passAttempts || 0;
+      newSeasonStats.teamStats.offense.completions += g.stats.offense.completions || 0;
+      newSeasonStats.teamStats.offense.passingYards += g.stats.offense.passingYards || 0;
+      newSeasonStats.teamStats.offense.rushAttempts += g.stats.offense.rushAttempts || 0;
+      newSeasonStats.teamStats.offense.rushingYards += g.stats.offense.rushingYards || 0;
+      newSeasonStats.teamStats.offense.firstDowns += g.stats.offense.firstDowns || 0;
+      newSeasonStats.teamStats.offense.touchdowns += g.stats.offense.touchdowns || 0;
+      newSeasonStats.teamStats.offense.totalPlays += g.stats.offense.totalPlays || 0;
+      
+      // Aggregate defense stats
+      if (!newSeasonStats.teamStats.defense) {
+        newSeasonStats.teamStats.defense = { flagPulls: 0, interceptions: 0, forcedPunts: 0, turnoversOnDowns: 0 };
+      }
+      newSeasonStats.teamStats.defense.flagPulls += g.stats.defense.flagPulls || 0;
+      newSeasonStats.teamStats.defense.interceptions += g.stats.defense.interceptions || 0;
+      newSeasonStats.teamStats.defense.forcedPunts = (newSeasonStats.teamStats.defense.forcedPunts || 0) + (g.stats.defense.forcedPunts || 0);
+      newSeasonStats.teamStats.defense.turnoversOnDowns = (newSeasonStats.teamStats.defense.turnoversOnDowns || 0) + (g.stats.defense.turnoversOnDowns || 0);
+      
+      // Aggregate player stats
+      if (!newSeasonStats.playerStats) newSeasonStats.playerStats = {};
+      Object.entries(g.playerStats || {}).forEach(([playerId, stats]) => {
+        if (!newSeasonStats.playerStats[playerId]) {
+          newSeasonStats.playerStats[playerId] = JSON.parse(JSON.stringify(stats));
+        } else {
+          // Aggregate offense
+          newSeasonStats.playerStats[playerId].offense.passAttempts += stats.offense.passAttempts || 0;
+          newSeasonStats.playerStats[playerId].offense.completions += stats.offense.completions || 0;
+          newSeasonStats.playerStats[playerId].offense.incompletions += stats.offense.incompletions || 0;
+          newSeasonStats.playerStats[playerId].offense.passingYards += stats.offense.passingYards || 0;
+          newSeasonStats.playerStats[playerId].offense.interceptions += stats.offense.interceptions || 0;
+          newSeasonStats.playerStats[playerId].offense.rushAttempts += stats.offense.rushAttempts || 0;
+          newSeasonStats.playerStats[playerId].offense.rushingYards += stats.offense.rushingYards || 0;
+          newSeasonStats.playerStats[playerId].offense.receptions += stats.offense.receptions || 0;
+          newSeasonStats.playerStats[playerId].offense.receivingYards += stats.offense.receivingYards || 0;
+          newSeasonStats.playerStats[playerId].offense.touchdowns += stats.offense.touchdowns || 0;
+          
+          // Aggregate defense
+          newSeasonStats.playerStats[playerId].defense.flagPulls += stats.defense.flagPulls || 0;
+          newSeasonStats.playerStats[playerId].defense.interceptions += stats.defense.interceptions || 0;
+          newSeasonStats.playerStats[playerId].defense.tacklesForLoss = (newSeasonStats.playerStats[playerId].defense.tacklesForLoss || 0) + (stats.defense.tacklesForLoss || 0);
+          newSeasonStats.playerStats[playerId].defense.passDeflections = (newSeasonStats.playerStats[playerId].defense.passDeflections || 0) + (stats.defense.passDeflections || 0);
+        }
+      });
+      
+      // Save to storage
+      if (window.localStorage) {
+        localStorage.setItem('season_stats', JSON.stringify(newSeasonStats));
+      }
+      
+      // Update state ONCE
+      setSeasonStats(newSeasonStats);
+      
+    } catch (error) {
+      console.error('Error updating season stats:', error);
+      alert('Warning: Season stats may not have been saved properly. Game stats are saved.');
     }
     
     // Show final score and go to stats
